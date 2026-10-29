@@ -1,0 +1,13 @@
+langchain
+langchain-openai
+langchain-community
+langchain-milvus
+langgraph
+pandas
+psycopg2-binary
+unstructured
+python-dotenv
+presidio-analyzer
+spacy
+fastapi
+uvicorn

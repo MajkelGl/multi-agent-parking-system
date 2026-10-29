@@ -1,0 +1,17 @@
+venv/
+env/
+
+.env
+
+infrastructure/postgres_data/
+milvus_parking.db/
+*.db
+
+.vscode/
+
+__pycache__/
+*.pyc
+*.pyo
+
+confirmed_reservation.txt
+evaluation_report.txt
