@@ -104,15 +104,24 @@ def send_to_fastapi(reservation_data: dict) -> bool:
     headers = {"X-API-Key": os.getenv("X_API_KEY")}
     
     try:
-        response = requests.post("http://localhost:8000/api/reservations", json=api_data, headers=headers)
+        response = requests.post(
+            "http://localhost:8000/api/reservations", 
+            json=api_data, 
+            headers=headers,
+            timeout=5.0
+        )
         if response.status_code == 200:
             print("[FastAPI Server] Data successfully saved to confirmed_reservation.txt")
             return True
         else:
             print(f"[FastAPI Server Error] Status Code: {response.status_code}")
             return False
-    except Exception as e:
-        print(f"[FastAPI Server Error] Failed to connect: {e}")
+            
+    except requests.exceptions.Timeout:
+        print("[FastAPI Server Error] Request timed out after 5 seconds.")
+        return False
+    except requests.exceptions.RequestException as e:
+        print(f"[FastAPI Server Error] Connection failed: {e}")
         return False
 
 def run_admin_agent():
