@@ -3,11 +3,16 @@ langchain-openai
 langchain-community
 langchain-milvus
 langgraph
+pymilvus
+milvus-lite
+pytest
 pandas
 psycopg2-binary
+psycopg[binary]
 unstructured
 python-dotenv
 presidio-analyzer
 spacy
 fastapi
 uvicorn
+requests

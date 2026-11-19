@@ -1,6 +1,5 @@
 import os
 from dotenv import load_dotenv
-
 import psycopg2
 import random
 from datetime import datetime, timedelta
@@ -8,16 +7,12 @@ from datetime import datetime, timedelta
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_milvus import Milvus
-
 from src.utils.llm_config import load_llm, load_embeddings
 
 load_dotenv()
 
 POSTGRES_URL = os.getenv("POSTGRES_URL")
-MILVUS_FILE_PATH = os.getenv("MILVUS_FILE_PATH")
-    
-llm = load_llm()
-embeddings = load_embeddings()
+MILVUS_FILE_PATH = os.getenv("MILVUS_FILE_PATH", "./milvus_parking.db")
 
 CREATE_TABLE_QUERY = """
 DROP TABLE IF EXISTS reservations;
@@ -27,7 +22,6 @@ CREATE TABLE parking_spots (
     id INTEGER PRIMARY KEY,
     spot_number VARCHAR(10) UNIQUE NOT NULL,
     sector VARCHAR(10) NOT NULL,
-    is_occupied BOOLEAN DEFAULT FALSE,
     has_ev_charger BOOLEAN DEFAULT FALSE,
     is_disabled_only BOOLEAN DEFAULT FALSE
 );
@@ -38,8 +32,8 @@ CREATE TABLE reservations (
     guest_name VARCHAR(100),
     phone_number VARCHAR(20),
     license_plate VARCHAR(20),
-    start_time VARCHAR(50),
-    end_time VARCHAR(50),
+    start_time TIMESTAMP,
+    end_time TIMESTAMP,
     status VARCHAR(20) DEFAULT 'APPROVED'
 );
 """
@@ -57,52 +51,44 @@ def gen_plate():
     return f"DW {random.randint(10000, 99999)}"
 
 def seed_database():
-    print("Łączenie z bazą danych...")
-    conn = psycopg2.connect(os.getenv("POSTGRES_URL"))
+    print("Connecting to PostgreSQL...")
+    conn = psycopg2.connect(POSTGRES_URL)
     cur = conn.cursor()
-
     cur.execute(CREATE_TABLE_QUERY)
 
     spots = []
     reservations = []
     now = datetime.now()
-    
     spot_id = 1
 
     for i in range(1, 101):
-        is_occupied = random.choice([True, False])
-        spots.append((spot_id, f"A-{i:03d}", "A", is_occupied, False, False))
+        spots.append((spot_id, f"A-{i:03d}", "A", False, False))
         spot_id += 1
 
-
     for i in range(1, 51):
-        is_occupied = random.choice([True, False, False])
         is_ev = True if 21 <= i <= 35 else False
         is_disabled = True if 36 <= i <= 50 else False
+        spots.append((spot_id, f"B-{i:03d}", "B", is_ev, is_disabled))
         
-        spots.append((spot_id, f"B-{i:03d}", "B", is_occupied, is_ev, is_disabled))
-        
-        if is_occupied:
-            start = (now - timedelta(hours=random.randint(1, 5))).strftime("%Y-%m-%d %H:00")
-            end = (now + timedelta(hours=random.randint(2, 24))).strftime("%Y-%m-%d %H:00")
+        for _ in range(random.randint(0, 2)):
+            start_offset = random.randint(-48, 48)
+            start = (now + timedelta(hours=start_offset)).strftime("%Y-%m-%d %H:00:00")
+            end = (now + timedelta(hours=start_offset + random.randint(2, 12))).strftime("%Y-%m-%d %H:00:00")
             reservations.append((spot_id, gen_name(), gen_phone(), gen_plate(), start, end))
             
         spot_id += 1
 
     for i in range(1, 26):
-        is_occupied = random.choice([True, False])
-        spots.append((spot_id, f"VIP-{i:03d}", "VIP", is_occupied, False, False))
-        
-        if is_occupied:
-            start = (now - timedelta(hours=random.randint(1, 3))).strftime("%Y-%m-%d %H:00")
-            end = (now + timedelta(days=random.randint(1, 5))).strftime("%Y-%m-%d %H:00")
+        spots.append((spot_id, f"VIP-{i:03d}", "VIP", False, False))
+        if random.choice([True, False]):
+            start = (now - timedelta(hours=random.randint(1, 3))).strftime("%Y-%m-%d %H:00:00")
+            end = (now + timedelta(days=random.randint(1, 5))).strftime("%Y-%m-%d %H:00:00")
             reservations.append((spot_id, gen_name(), gen_phone(), gen_plate(), start, end))
-            
         spot_id += 1
 
     insert_spots_query = """
-        INSERT INTO parking_spots (id, spot_number, sector, is_occupied, has_ev_charger, is_disabled_only)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO parking_spots (id, spot_number, sector, has_ev_charger, is_disabled_only)
+        VALUES (%s, %s, %s, %s, %s)
     """
     cur.executemany(insert_spots_query, spots)
 
@@ -132,7 +118,7 @@ def seed_vector_database():
     print("4. Initializing OpenAI Embeddings model...")
     embeddings = load_embeddings()
 
-    print("5. Attempting to connect to Milvus Lite and save data (this may take a while)...")
+    print("5. Attempting to connect to Milvus Lite and save data...")
     vector_db = Milvus.from_documents(
         documents=docs,
         embedding=embeddings,

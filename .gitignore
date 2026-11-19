@@ -12,6 +12,3 @@ milvus_parking.db/
 __pycache__/
 *.pyc
 *.pyo
-
-confirmed_reservation.txt
-evaluation_report.txt

@@ -1,9 +1,9 @@
-from llm_config import llm, embeddings
+from src.utils.llm_config import load_llm, load_embeddings
 
 print("Testing LLM connection...")
 
 try:
-    response = llm.invoke("Hello, how are you?")
+    response = load_llm.invoke("Hello, how are you?")
     print("LLM connection successful. Response:")
     print(response.content[:])
 except Exception as e:
@@ -13,7 +13,7 @@ except Exception as e:
 try:
     print("Testing Embeddings connection...")
     test_text = "This is a test."
-    embedding_vector = embeddings.embed_query(test_text)
+    embedding_vector = load_embeddings.embed_query(test_text)
     print("Embeddings connection successful. Embedding vector:")
     print(embedding_vector)
 except Exception as e:

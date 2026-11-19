@@ -1,0 +1,272 @@
+=== RAG SYSTEM EVALUATION REPORT ===
+
+--- EXPERIMENT WITH TOP-K = 1 ---
+Average Context Relevance: 5.00/5.0
+Average Answer Correctness: 5.00/5.0
+
+Detailed Breakdown:
+Q1: Can a regular employee park in the lot on Saturday?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states standard hours (Mon–Fri 06:00–22:00) and that weekend access is restricted to VIP/Executive pass holders; the final answer matches this.
+Answer Generated: No. The lot is open to regular employees Monday–Friday (06:00–22:00). Weekend access (including Saturdays) is restricted to VIP and Executive pass holders only.
+--------------------------------------------------
+Q2: What is the maximum speed limit inside the corporate parking lot?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: The retrieved context explicitly states the speed limit is 15 km/h (9 mph), and the final answer matches this ground truth exactly.
+Answer Generated: The maximum speed limit inside the corporate parking lot is 15 km/h (9 mph).
+--------------------------------------------------
+Q3: Who is authorized to park in Sector B?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: The retrieved context explicitly states Sector B is reserved for electric vehicles requiring charging and vehicles displaying a valid disabled parking permit; the final answer matches this exactly.
+Answer Generated: Sector B is reserved exclusively for electric vehicles requiring charging and for vehicles displaying a valid disabled parking permit.
+--------------------------------------------------
+Q4: I would like to reserve a specific parking spot in Sector A for tomorrow. Is that possible?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states Sector A is first-come, first-served and reservations are only for Sector B/VIP; final answer matches the ground truth and context.
+Answer Generated: No — you cannot reserve a specific spot in Sector A. Sector A is strictly first-come, first-served and does not allow advance or assigned spot reservations.
+
+If you want to make an advance reservation, those are allowed only for Sector B or Sector VIP. To request a reservation you must provide exactly these six pieces of information:
+- Full name
+- Phone number (emergency contact)
+- Vehicle license plate number
+- Desired sector (B or VIP)
+- Start date and time
+- End date and time
+
+Note: Sector B is for EV charging and disabled-permit vehicles; Sector VIP is for C-level executives and pre-approved external guests. Also be aware the lot’s standard hours are Mon–Fri 06:00–22:00 and weekend access is limited to VIP/Executive pass holders.
+--------------------------------------------------
+Q5: I have to leave my car in the lot overnight on a Tuesday. How much will I be charged?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states the $15 overnight fee (10:00 PM–06:00 AM) and payroll deduction for employees; the final answer matches this and correctly notes no info for non-employees.
+Answer Generated: If you are an employee: leaving your car between 10:00 PM and 6:00 AM incurs a $15 per night fee, automatically deducted from your payroll.
+
+If you are not an employee: the provided information does not state overnight fees for non-employees, so I cannot provide an amount.
+--------------------------------------------------
+Q6: A guest is visiting the office and will park for exactly 6 hours. What is their total parking fee?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states guests get first 4 hours free and additional hours cost $2 each; final answer correctly computes 2 extra hours * $2 = $4.
+Answer Generated: The first 4 hours are free. For 6 hours total, there are 2 paid hours at $2/hour = $4 total.
+--------------------------------------------------
+Q7: What information must I provide to request a parking reservation for a VIP guest?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly lists the exact six required pieces of information; the final answer matches the ground truth listing those six items (including sector availability B or VIP), so both are fully correct.
+Answer Generated: To request an advance reservation (e.g., for a VIP guest) you must provide exactly these 6 items:
+- Full name
+- Phone number (for emergency contact)
+- Vehicle license plate number
+- Desired sector (must be B or VIP)
+- Start date and time
+- End date and time
+
+Note: Advance reservations are only available for Sector B and Sector VIP; Sector A cannot be reserved.
+--------------------------------------------------
+Q8: Does the system automatically approve reservations for Sector B once I provide all my details?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: The retrieved context explicitly states that all reservations are subject to manual approval by the Facility Administrator and lists the six required reservation fields; the final answer correctly reflects both points.
+Answer Generated: No. Even for Sector B (advance reservations allowed), all reservation requests are subject to manual approval by the Facility Administrator. To request a reservation you must provide exactly these six items: full name; phone number; vehicle license plate; desired sector (B or VIP); start date & time; end date & time.
+--------------------------------------------------
+Q9: What is the penalty for an employee who parks in the VIP Sector without authorization?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states the $50 fine and formal HR warning for unauthorized VIP parking, and the final answer matches the ground truth exactly.
+Answer Generated: Parking in Sector VIP without authorization results in a $50 fine and a formal HR warning.
+--------------------------------------------------
+Q10: What happens if someone tailgates another car to enter the parking lot without badging in?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: The retrieved context explicitly states tailgating is prohibited and results in a 30-day suspension, and the final answer accurately reflects this.
+Answer Generated: Tailgating (following another car closely to enter without swiping a badge) is strictly prohibited and will result in a 30‑day suspension of parking privileges.
+--------------------------------------------------
+Q11: How much is the towing fee if I accidentally block an EV charging station?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: The retrieved context explicitly states a $150 towing fee for blocking EV charging stations charged to the owner's expense, and the final answer matches this ground truth exactly.
+Answer Generated: The towing fee is $150. Blocking EV charging stations results in immediate towing at the owner’s expense.
+--------------------------------------------------
+Q12: My electric vehicle finished charging after 2 hours, but I left it plugged in for another hour. Will I be charged?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states charging is free for first 2 hours and a $5/hour idle fee thereafter; the final answer correctly applies this to the extra hour and mentions towing consequences.
+Answer Generated: Yes. In Sector B charging is free for the first 2 hours. If your vehicle finished charging and remained plugged in (fully charged) past the 2-hour mark, a $5/hour idle fee applies — so you would be charged $5 for that extra hour. Note also that blocking EV charging stations can lead to immediate towing (towing fee $150).
+--------------------------------------------------
+
+
+--- EXPERIMENT WITH TOP-K = 3 ---
+Average Context Relevance: 5.00/5.0
+Average Answer Correctness: 5.00/5.0
+
+Detailed Breakdown:
+Q1: Can a regular employee park in the lot on Saturday?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states weekend access is restricted to VIP/Executive pass holders and standard hours are Mon–Fri 06:00–22:00, and the final answer accurately reflects this.
+Answer Generated: No. Weekend access is restricted to VIP and Executive pass holders only. Standard operating hours are Monday–Friday, 06:00–22:00, so a regular employee may not park on Saturday under the provided rules.
+--------------------------------------------------
+Q2: What is the maximum speed limit inside the corporate parking lot?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: The retrieved context explicitly states the maximum speed limit is 15 km/h (9 mph), and the final answer matches this ground truth.
+Answer Generated: The maximum speed limit inside the corporate parking lot is 15 km/h (9 mph).
+--------------------------------------------------
+Q3: Who is authorized to park in Sector B?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states Sector B is reserved for EVs requiring charging and vehicles displaying a valid disabled parking permit, and the final answer matches this exactly.
+Answer Generated: Sector B is reserved exclusively for electric vehicles that require charging and for vehicles displaying a valid disabled parking permit.
+--------------------------------------------------
+Q4: I would like to reserve a specific parking spot in Sector A for tomorrow. Is that possible?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states Sector A is first-come, first-served and reservation rules; the final answer matches the ground truth and correctly lists reservation options and required information.
+Answer Generated: No — you cannot reserve a specific spot in Sector A. Sector A is strictly first-come, first-served and has no permanent or reservable spots.
+
+If you need to make an advance reservation, you may only do so for Sector B or Sector VIP. To request a reservation you must provide exactly these six pieces of information:
+1. Full name
+2. Phone number (emergency contact)
+3. Vehicle license plate number
+4. Desired sector (B or VIP)
+5. Start date and time
+6. End date and time
+--------------------------------------------------
+Q5: I have to leave my car in the lot overnight on a Tuesday. How much will I be charged?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states the $15 overnight fee and payroll deduction. The answer correctly reports $15/night for employees and appropriately notes that guest overnight charging isn’t specified beyond the hourly guest rules.
+Answer Generated: If you are an employee: $15 per night for vehicles left between 10:00 PM and 06:00 AM (automatically deducted from payroll).
+
+If you are a guest: the provided rules do not specify a distinct overnight guest fee. The guest rate in the policy is: first 4 hours free, then $2 per additional hour up to a $12 per day maximum — I cannot definitively say how overnight stays are charged beyond that. 
+
+Do you want to confirm whether you’re an employee or a guest so I can give the most relevant answer?
+--------------------------------------------------
+Q6: A guest is visiting the office and will park for exactly 6 hours. What is their total parking fee?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states guests get first 4 hours free and additional hours cost $2; the answer correctly applies this to 6 hours (2 paid hours × $2 = $4).
+Answer Generated: Guests get the first 4 hours free. For 6 hours, there are 2 paid hours × $2/hour = $4 total.
+--------------------------------------------------
+Q7: What information must I provide to request a parking reservation for a VIP guest?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: The retrieved context explicitly lists the six required pieces of information (including desired sector VIP), and the final answer exactly matches the ground truth.
+Answer Generated: You must provide exactly six pieces of information:
+1. Full name  
+2. Phone number (for emergency contact)  
+3. Vehicle license plate number  
+4. Desired sector (B or VIP)  
+5. Start date and time  
+6. End date and time
+--------------------------------------------------
+Q8: Does the system automatically approve reservations for Sector B once I provide all my details?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: The retrieved context explicitly states that all reservation requests are subject to manual approval by the Facility Administrator; the final answer accurately and directly reflects this and provides the correct reservation details.
+Answer Generated: No. Even for Sector B, reservations are not automatic—all reservation requests are subject to manual approval by the Facility Administrator.
+
+You can request an advance reservation (available only for Sector B or VIP) by providing exactly six pieces of information:
+- Full name
+- Phone number (emergency contact)
+- Vehicle license plate number
+- Desired sector (B or VIP)
+- Start date and time
+- End date and time
+
+Note: Sector A cannot be reserved (first-come, first-served).
+--------------------------------------------------
+Q9: What is the penalty for an employee who parks in the VIP Sector without authorization?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly includes the $50 fine and formal HR warning for unauthorized VIP parking, and the final answer matches the ground truth exactly.
+Answer Generated: Parking in the VIP Sector without authorization results in a $50 fine and a formal HR warning.
+--------------------------------------------------
+Q10: What happens if someone tailgates another car to enter the parking lot without badging in?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states tailgating is prohibited and leads to a 30-day suspension; the final answer matches this exactly.
+Answer Generated: Tailgating (following another car closely to enter without swiping a badge) is strictly prohibited and will result in a 30-day suspension of parking privileges.
+--------------------------------------------------
+Q11: How much is the towing fee if I accidentally block an EV charging station?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states towing fee is $150 for blocking EV charging stations and that it is charged to the owner; the final answer accurately and directly reflects this.
+Answer Generated: The towing fee is $150; blocking EV charging stations results in immediate towing at the vehicle owner’s expense.
+--------------------------------------------------
+Q12: My electric vehicle finished charging after 2 hours, but I left it plugged in for another hour. Will I be charged?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states the 2-hour free period and $5/hour idle fee; final answer correctly applies that to the extra hour and appropriately references the towing penalty for blocking chargers.
+Answer Generated: Yes. Charging is free for the first 2 hours, and after that a $5/hour idle fee applies if the vehicle is fully charged but not moved — so you would be charged $5 for that extra hour. Also note that blocking EV charging stations can lead to immediate towing at the owner’s expense ($150).
+--------------------------------------------------
+
+
+--- EXPERIMENT WITH TOP-K = 5 ---
+Average Context Relevance: 5.00/5.0
+Average Answer Correctness: 5.00/5.0
+
+Detailed Breakdown:
+Q1: Can a regular employee park in the lot on Saturday?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states weekend access is restricted to VIP/Executive and standard hours are Mon–Fri 06:00–22:00; the final answer correctly reflects this.
+Answer Generated: No. Weekend access is restricted to VIP and Executive pass holders only. Regular employees are allowed to park Monday–Friday from 06:00 to 22:00, so they cannot park on Saturday.
+--------------------------------------------------
+Q2: What is the maximum speed limit inside the corporate parking lot?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: The retrieved context explicitly states the maximum speed limit is 15 km/h (9 mph), and the final answer matches the ground truth exactly.
+Answer Generated: The maximum speed limit is 15 km/h (9 mph).
+--------------------------------------------------
+Q3: Who is authorized to park in Sector B?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states Sector B is reserved for EVs requiring charging and vehicles with a disabled parking permit, and the final answer matches this exactly.
+Answer Generated: Sector B is reserved exclusively for electric vehicles that require charging and for vehicles displaying a valid disabled parking permit.
+--------------------------------------------------
+Q4: I would like to reserve a specific parking spot in Sector A for tomorrow. Is that possible?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: The retrieved context explicitly states Sector A cannot be reserved and provides the reservation alternatives and required information; the final answer accurately and directly reflects this information.
+Answer Generated: No — you cannot reserve a specific spot in Sector A. Sector A operates strictly on a first-come, first-served basis and cannot be reserved in advance.
+
+If you want to make an advance reservation instead, note:
+- Advance reservations are only available for Sector B or Sector VIP.
+- Sector B is reserved for EVs needing charging and vehicles with a valid disabled parking permit. Sector VIP is for C‑level executives and pre‑approved external guests.
+- To request a reservation you must provide exactly six pieces of information:
+  1. Full name
+  2. Phone number (emergency contact)
+  3. Vehicle license plate number
+  4. Desired sector (B or VIP)
+  5. Start date and time
+  6. End date and time
+
+Also note standard operating hours are Monday–Friday 06:00–22:00; weekend access is restricted to VIP and Executive pass holders only. If you want to proceed with a reservation in Sector B or VIP, provide the six required items.
+--------------------------------------------------
+Q5: I have to leave my car in the lot overnight on a Tuesday. How much will I be charged?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states the $15 overnight employee fee and guest hourly/cap fees. Final answer matches the ground truth for employees and correctly adds guest fee details.
+Answer Generated: If you are an employee: $15 per night for vehicles left between 10:00 PM and 06:00 AM, automatically deducted from your payroll.
+
+If you are a guest: the first 4 hours are free; after that it’s $2 per additional hour up to a maximum of $12 per day (so an overnight stay would be charged up to $12).
+--------------------------------------------------
+Q6: A guest is visiting the office and will park for exactly 6 hours. What is their total parking fee?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states guests get 4 free hours and additional hours cost $2 each; for a 6-hour stay that yields 2×$2 = $4, matching the final answer.
+Answer Generated: The guest pays $4 (first 4 hours are free; the remaining 2 hours × $2/hour = $4).
+--------------------------------------------------
+Q7: What information must I provide to request a parking reservation for a VIP guest?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly lists the exact six required pieces of information and the final answer matches them precisely.
+Answer Generated: To request a VIP parking reservation you must provide exactly these six pieces of information:
+- Full name
+- Phone number (for emergency contact)
+- Vehicle license plate number
+- Desired sector (VIP)
+- Start date and time
+- End date and time
+--------------------------------------------------
+Q8: Does the system automatically approve reservations for Sector B once I provide all my details?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states all reservation requests are subject to manual approval and lists the six required pieces of information; the final answer correctly reflects this.
+Answer Generated: No. Even for Sector B, advance reservation requests must be manually approved by the Facility Administrator. You still need to submit the required six pieces of information, but approval is not automatic.
+--------------------------------------------------
+Q9: What is the penalty for an employee who parks in the VIP Sector without authorization?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states the $50 fine and formal HR warning for unauthorized VIP parking, and the final answer matches this exactly.
+Answer Generated: Unauthorized parking in Sector VIP results in a $50 fine and a formal HR warning.
+--------------------------------------------------
+Q10: What happens if someone tailgates another car to enter the parking lot without badging in?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states tailgating is prohibited and leads to a 30-day suspension; the final answer matches this policy exactly.
+Answer Generated: Tailgating (following another car closely to enter without swiping a badge) is strictly prohibited and will result in a 30-day suspension of parking privileges.
+--------------------------------------------------
+Q11: How much is the towing fee if I accidentally block an EV charging station?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context explicitly states the towing fee is $150 charged at the owner's expense for blocking EV charging stations; the final answer matches this exactly.
+Answer Generated: The towing fee is $150; blocking EV charging stations results in immediate towing at the owner's expense.
+--------------------------------------------------
+Q12: My electric vehicle finished charging after 2 hours, but I left it plugged in for another hour. Will I be charged?
+Context Score: 5/5 | Answer Score: 5/5
+Reasoning: Retrieved context includes the exact EV charging policy (first 2 hours free, $5/hour idle fee) and towing penalty; the final answer correctly states the $5 charge for the extra hour and the towing risk.
+Answer Generated: Yes. Sector B EV chargers are free for the first 2 hours, but once the vehicle is fully charged and not moved after those 2 hours a $5/hour idle fee applies — so you would be charged $5 for that extra hour. Also note that leaving a car at an EV charger can be considered blocking the charging station and may result in immediate towing (towing fee $150).
+--------------------------------------------------
+
+

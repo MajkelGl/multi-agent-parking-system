@@ -1,5 +1,12 @@
+import os
 import uuid
-from langchain_core.messages import HumanMessage, ToolMessage
+
+os.environ["GRPC_ARG_KEEPALIVE_TIME_MS"] = "60000"
+os.environ["GRPC_ARG_KEEPALIVE_TIMEOUT_MS"] = "20000"
+os.environ["GRPC_ARG_KEEPALIVE_PERMIT_WITHOUT_CALLS"] = "0"
+os.environ["GRPC_ARG_HTTP2_MAX_PINGS_WITHOUT_DATA"] = "0"
+
+from langchain_core.messages import HumanMessage
 from src.bot.graph import graph
 
 def run_cli():
@@ -15,33 +22,6 @@ def run_cli():
             continue
 
         graph.invoke({"messages": [HumanMessage(content=user_input)]}, config=config)
-
-        state = graph.get_state(config)
-        
-        if state.next and state.next[0] == "admin_node":
-            last_msg = state.values["messages"][-1]
-            tool_call_id = last_msg.tool_calls[0]["id"]
-            
-            res_data = last_msg.tool_calls[0]["args"]
-            print(f"\n[HITL] Administrator acceptance is needed:")
-            print(f"       Data: {res_data}")
-            
-            approval = input("Proceed with reservation and save to PostgreSQL? (Y/N): ")
-            
-            if approval.strip().upper() in ["T", "Y"]:
-                print("[SYSTEM] Administrator approved. Saving to database...")
-                graph.invoke(None, config=config)
-            else:
-                print("[SYSTEM] Administrator rejected. Informing the bot...")
-                
-                rejection_msg = ToolMessage(
-                    content="SYSTEM: The administrator rejected the reservation. Tell the user that unfortunately the administrator did not approve the reservation and you cannot do anything about it.",
-                    tool_call_id=tool_call_id
-                )
-                
-                graph.update_state(config, {"messages": [rejection_msg]}, as_node="admin_node")
-                
-                graph.invoke(None, config=config)
 
         current_state = graph.get_state(config)
         if current_state.values.get("messages"):

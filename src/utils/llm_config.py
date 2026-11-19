@@ -15,7 +15,7 @@ if AZURE_ENDPOINT:
     AZURE_ENDPOINT = AZURE_ENDPOINT.replace("/openai/v1", "").replace("/openai/v1/", "")
 
 if not AZURE_API_KEY:
-    raise ValueError("Brak AZURE_OPENAI_API_KEY w pliku .env!")
+    raise ValueError("Missing AZURE_OPENAI_API_KEY in .env file!")
 
 def load_llm():
     return AzureChatOpenAI(

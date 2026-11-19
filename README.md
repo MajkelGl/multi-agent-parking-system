@@ -9,37 +9,31 @@ This project implements an intelligent, multi-agent parking reservation system d
 The architecture is designed to handle a full reservation lifecycle securely and autonomously until human approval is required. Here is the step-by-step data flow:
 
 1. **User Input & PII Guardrails (Presidio):** 
-   When a user sends a message (e.g., "Book a spot for John Doe, +48 123 456 789"), the message first passes through a custom `GuardrailsManager`. Microsoft Presidio detects sensitive entities (PERSON, PHONE_NUMBER) and replaces them with secure tokens (e.g., `[TOKEN_PERSON_0]`). The LLM never sees the real personal data.
+   When a user sends a message (e.g., "Book a spot for John Doe, +48 123 456 789"), the message first passes through a custom `GuardrailsManager`. Microsoft Presidio detects sensitive entities (PERSON, PHONE_NUMBER, LICENSE_PLATE) and replaces them with secure tokens (e.g., `[TOKEN_PERSON_0]`). The LLM never sees the real personal data.
    
 2. **Agent Reasoning & Routing (LangGraph):**
    The tokenized prompt is passed to the main Conversational Agent (`agent_node`). Using a ReAct (Reasoning and Acting) prompt loop, the LLM determines what it needs to do next. It has access to two main tools:
    * `check_rules`: Queries the **Milvus Vector Database** (RAG) to understand static parking regulations (e.g., VIP sector rules, EV charging policies).
-   * `check_database`: Generates and executes a SQL query (Text-to-SQL) against the **PostgreSQL Database** to find real-time availability.
+   * `check_database`: Generates and executes a SQL query (Text-to-SQL) against the **PostgreSQL Database** to find real-time availability, protected by a strict **Read-Only SQL Validator** preventing any unauthorized modifications (`DROP`, `UPDATE`, `DELETE`, etc.).
 
 3. **Data Collection & Escalation:**
-   Once the agent has gathered all 6 required reservation details (Name, Phone, Plate, Sector, Start Time, End Time) and verified availability, it attempts to call the `submit_reservation` tool. 
+   Once the agent has gathered all 6 required reservation details (Name, Phone, Plate, Sector, Start Time, End Time) and verified availability, it attempts to submit the reservation, saving it initially as `PENDING` in PostgreSQL.
 
-4. **Human-In-The-Loop (HITL) Checkpoint:**
-   LangGraph intercepts the `submit_reservation` call using an `interrupt_before` mechanism. The system pauses the AI's execution and escalates the request to the Administrator via the CLI (`admin_node`). 
-   * If the Admin rejects (presses 'N'), a `ToolMessage` is injected back into the graph, and the AI politely informs the user of the rejection.
-   * If the Admin approves (presses 'Y'), the system proceeds to finalization.
+4. **Human-In-The-Loop (HITL) Checkpoint & Admin Copilot:**
+   An independent background process (`admin_app.py`) acts as an AI Admin, performing time-overlap and duplicate checks per vehicle/license plate.
+   * If a time conflict or vehicle duplicate is detected, the system automatically rejects the request.
+   * Otherwise, it prompts the Administrator via CLI (`Y/N`). If approved, it proceeds to finalization.
 
-5. **Detokenization & Dual-Write Audit (FastAPI MCP):**
-   Upon approval, the `admin_node` retrieves the real personal data from the Presidio Vault (`detokenize`). It then performs a secure dual-write operation:
-   * **Step A:** Updates the PostgreSQL database (marks the spot as occupied and saves the reservation).
-   * **Step B:** Sends a secure, authenticated POST request (with an API key) to the standalone **FastAPI (MCP) server**, which independently writes an unalterable audit log to `confirmed_reservation.txt`.
-
-### Key Problems & Challenges Encountered
-1. **Data Privacy (PII):** Handling sensitive user data (names, phone numbers, license plates) during LLM processing posed a security risk.
-2. **Infinite Tool Loops (ReAct):** The agent occasionally entered recursive loops when querying rule databases, attempting to validate multiple constraints simultaneously.
-3. **gRPC Connection Instability:** Long-running conversational pauses led to `ENHANCE_YOUR_CALM (too_many_pings)` errors from the vector database.
-4. **Execution Safety:** Autonomous database modifications required human validation before execution.
+5. **Dual-Write Audit (FastAPI):**
+   Upon approval, the system performs a secure dual-write operation:
+   * **Step A:** Updates the PostgreSQL database status from `PENDING` to `APPROVED`.
+   * **Step B:** Sends a secure, authenticated POST request (with an API key) to the standalone **FastAPI server**, which independently writes an unalterable audit log to `confirmed_reservation.txt`.
 
 ### Solutions & Reasoning
-* **Multi-Agent Orchestration (LangGraph):** Designed a two-agent architecture consisting of a Conversational RAG Agent (interacting with users) and an Execution Agent (Administrator) with a Human-In-The-Loop (HITL) checkpoint.
-* **PII Vault Tokenization:** Guardrails are applied in-flight. Data is dynamically detokenized only after HITL approval, right before database insertion.
-* **Hybrid Knowledge Retrieval:** Combines dynamic Text-to-SQL (PostgreSQL) with semantic search (Milvus).
-* **Loop & Stability Handling:** Enforced strict system prompt constraints, applied LangGraph recursion limits (`recursion_limit=10`), and configured gRPC C-core environment variables (`GRPC_ARG_KEEPALIVE_TIME_MS`) to ensure connection stability during idle chat states.
+* **Multi-Agent Orchestration (LangGraph):** Designed a robust architecture featuring conversational RAG agents and an independent Admin Copilot with automated checks and Human-In-The-Loop (HITL) validation.
+* **PII Vault Tokenization:** Guardrails are applied in-flight, ensuring 0% PII leakage to the LLM.
+* **Read-Only SQL Guard:** Enforced strict regex checks on LLM-generated SQL queries to ensure only safe `SELECT` statements are executed.
+* **Duplicate Prevention Logic:** Implemented time-window overlap validation checking existing `PENDING` and `APPROVED` statuses against license plates.
 
 ### Outcomes & Insights
 The final system successfully bridges generative AI with deterministic business logic. The dual-write transaction ensures that a reservation is only finalized when a human administrator approves it, resulting in a 100% safe, auditable, and privacy-compliant AI pipeline.
@@ -49,7 +43,7 @@ The final system successfully bridges generative AI with deterministic business 
 ## MLE Part: Engineering & Deployment
 
 ### Repository Overview
-The repository is structured to separate the AI orchestration logic from the execution environment. It features a conversational bot module and a standalone Model Context Protocol (MCP) audit server built with FastAPI.
+The repository is structured to separate the AI orchestration logic from the execution environment. It features a conversational bot module, an automated Admin Copilot, and a standalone Model Context Protocol (MCP) audit server built with FastAPI.
 
 ### Project Structure
 ```text
@@ -61,27 +55,29 @@ The repository is structured to separate the AI orchestration logic from the exe
 │   └── docker-compose.yml        # Docker configuration for PostgreSQL
 ├── src/
 │   ├── bot/
-│   │   ├── app.py                # Main entry point and CLI interface
+│   │   ├── admin_app.py          # Administrator Agent background process
+│   │   ├── app.py                # Main entry point and CLI interface for users
 │   │   ├── evaluate_rag.py       # RAG evaluation script
 │   │   ├── graph.py              # LangGraph nodes, routing, and HITL logic
 │   │   ├── guardrails.py         # PII tokenization (Presidio) integration
 │   │   ├── retriever.py          # Vector database (Milvus) retrieval logic
 │   │   ├── router.py             # Query routing logic for the agent
-│   │   └── sql_chain.py          # Text-to-SQL logic for PostgreSQL
+│   │   └── sql_chain.py          # Text-to-SQL logic with read-only security guards
 │   ├── database/
 │   │   └── seed.py               # DB initialization and synthetic data generator
 │   ├── mcp/
 │   │   └── server.py             # FastAPI microservice for secure audit logging
+│   ├── tests/
+│   │   └── test_parking_system.py# Pytest unit and integration test suite
 │   └── utils/
 │       ├── llm_config.py         # Centralized LLM and Embeddings configuration
 │       └── test_connections.py   # Script to test DB and API connections
 ├── .env.example                  # Template for environment variables
 ├── .gitignore                    # Git ignored files configuration
 ├── confirmed_reservation.txt     # Output log file generated by MCP (created when run)
-├── evaluation_report.txt         # RAG evaluation results (created when run, evaluate_rag.py)
+├── evaluation_report.txt         # RAG evaluation results (created when run)
 ├── requirements.txt              # Python dependencies
 └── README.md                     # Project documentation
-```
 
 ### Step-by-step Instructions
 
@@ -109,7 +105,7 @@ Before running the system, ensure you have Python 3.10+ and Docker Desktop insta
    ```
 
 #### 1. How to run training/setup with Docker
-*Note: This project does not require traditional model training, but relies on setting up the vector store (Milvus) and relational database (PostgreSQL) for context retrieval.*
+*Note: This project relies on initializing the local Milvus vector store and the PostgreSQL relational database.*
 
 1. **Start the infrastructure using Docker Compose:**
    Ensure your local Docker Desktop is running, then execute:
@@ -117,29 +113,36 @@ Before running the system, ensure you have Python 3.10+ and Docker Desktop insta
    docker-compose -f infrastructure/docker-compose.yml up -d
    ```
 2. **Initialize and Seed the Databases:** 
-   Run the `seed.py` script. This script drops existing tables (if any), creates the necessary schema, and **generates realistic synthetic data** (randomized names, phone numbers, license plates, and parking spot occupancies) so the PostgreSQL database is populated for immediate testing. It also embeds the Markdown documentation into the Milvus vector store.
+   Run the `seed.py` script to set up tables, generate synthetic parking data, and embed regulations into Milvus.
    ```bash
    python -m src.database.seed
    ```
 
-#### 2. How to run inference
-The system requires running two concurrent services: the MCP Audit Server and the Bot interface.
+#### 2. How to run tests
+   To run the automated test suite using `pytest`:
+   ```bash
+   python -m pytest -v
+   ```
 
-**Terminal 1: Start the MCP Server (FastAPI)**
+#### 3. How to run inference
+The system requires running three concurrent terminal processes:
+
+**Terminal 1: Start the FastAPI Server**
 ```bash
-uvicorn src.mcp.server:app --port 8000 --reload
+uvicorn src.FastAPI.server:app --port 8000 --reload
 ```
 
-**Terminal 2: Start the AI Agent (Inference & Chat)**
+**Terminal 2: Start the AI Agent (Chat and declaring reservation)**
 ```bash
 python -m src.bot.app
+```
+
+**Terminal 3: Start the AI Admin Agent (Admin panel with summary and acceptance of reservation)**
+```bash
+python -m src.bot.admin_app
 ```
 
 #### Description of Outputs
 * **PostgreSQL (`reservations` & `parking_spots` tables):** Updates spot availability (`is_occupied = TRUE`) and stores the detokenized reservation details.
 * **Audit Log (`confirmed_reservation.txt`):** The MCP server generates a physical log entry upon successful database transaction. Format: `Name | License Plate | Start Time - End Time | Approval Timestamp`.
 * **Standard Output (CLI):** Real-time conversational interface with system logs detailing tool usage, PII tokenization, and HITL requests (acting as the Administrator interface).
-
-#### Reported Metrics
-* **E2E Dual-Write Success Rate:** 100% (The pipeline ensures the MCP audit log is only appended if the PostgreSQL transaction and HITL approval succeed).
-* **PII Leakage Rate:** 0% (All sensitive entities are successfully tokenized prior to LLM processing).
